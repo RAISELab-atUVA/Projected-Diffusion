@@ -17,6 +17,19 @@
 
 ---
 
+## Training
+
+```
+python main.py --mode 'train' --experiment [experimental setting] --train_set_path [/path/to/train/data] --val_set_path [/path/to/val/data] --run_name [run name]
+```
+
+
+## Inference
+
+```
+python main.py --mode 'sample' --n_samples 1 --experiment [experimental setting] 
+```
+
 
 ## Reference
 For technical details and full experimental results, please check [our paper](https://arxiv.org/pdf/2402.03559.pdf).

@@ -17,8 +17,9 @@ def main():
     parser.add_argument("--experiment", type=str, choices=['microstructures', 'trajectories', 'motion', 'other'], default='microstructures', help="Experiment setting")
     parser.add_argument("--projection_path", type=str, default=None, help="If experiment argument is \'other\', set path to custom projection operator")
     parser.add_argument("--model_path", type=str, default=None, help="Set path to diffusion model checkpoint")
-    parser.add_argument("--data_path", type=str, default=None, help="Set path to data if in training mode")
-    parser.add_argument("--n_samples", type=int, default=10, help="Number of samples")
+    parser.add_argument("--train_set_path", type=str, default=None, help="Set path to training data if in training mode")
+    parser.add_argument("--val_set_path", type=str, default=None, help="Set path to validation data if in training mode")
+    parser.add_argument("--n_samples", type=int, default=1, help="Number of samples")
     # Model parameters
     parser.add_argument("--eps", type=float, default=1.5e-5, help="Epsilon of step size")
     parser.add_argument("--sigma_min", type=float, default=0.005, help="Sigma min of Langevin dynamic")
@@ -60,7 +61,7 @@ def _train(args):
         module_path = f"examples.{args.projection_path}.dataloader"
         projection_module = __import__(module_path, fromlist=["get_dataset"])
         get_dataset = getattr(projection_module, "get_dataset")
-    train_loader, validation_loader = get_dataset()
+    train_loader, validation_loader = get_dataset(args.train_set_path, args.val_set_path)
 
     # Set up trainer
     current_iteration = 0
@@ -76,16 +77,13 @@ def _train(args):
     while current_iteration != args.total_iteration:
     
         ## Training Routine ##
-    
         model.train()
-        
         for data, _ in train_loader:
             data = data.to(device)
             loss = model.loss_fn(data)
             optim.zero_grad()
             loss.backward()
             optim.step()
-
             losses.update(loss.item())
             
         progress.display(current_iteration)
@@ -93,12 +91,9 @@ def _train(args):
         
         
         ## Validation Routine ##
-        
         model.eval()
-        
         val_loss_accumulator = 0.0
         val_steps = 0
-        
         with torch.no_grad():
             for data, _ in validation_loader:
                 data = data.to(device)                
@@ -112,11 +107,9 @@ def _train(args):
         # Checkpointing
         if avg_validation_loss < best_val_loss:
             best_val_loss = avg_validation_loss
-
             # Save original model checkpoint
             model_save_path = os.path.join(f"examples/{args.projection_path}/models", args.run_name, f"ckpt.pt")
             torch.save(model.state_dict(), model_save_path)
-        
             # Optionally save the optimizer state
             optimizer_save_path = os.path.join(f"examples/{args.projection_path}/models", args.run_name, f"optim.pt")
             torch.save(optim.state_dict(), optimizer_save_path)
@@ -124,11 +117,9 @@ def _train(args):
             
         ## Logging ##
         if current_iteration % args.display_iteration == 0:
-            
             # Save original model checkpoint
             model_save_path = os.path.join("models", args.run_name, f"ckpt_{current_iteration}.pt")
             torch.save(model.state_dict(), model_save_path)
-            
             dynamic = scoremodel.AnnealedLangevinDynamic(args.sigma_min, args.sigma_max, args.n_steps, args.annealed_step, model, None, device, eps=args.eps)
             sample = dynamic.sampling(args.n_samples, only_final=True)
             for i in range(len(sample)):

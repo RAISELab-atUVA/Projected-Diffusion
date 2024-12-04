@@ -51,17 +51,28 @@ def _train(args):
     optim = torch.optim.Adam(model.parameters(), lr = 0.005)
 
     # Generate dataset
+    if args.experiment != 'other':
+        create_outputs_directory(f"examples/{args.experiment}/models")
+    else:
+        create_outputs_directory(f"examples/{args.projection_path}/models")
+    
     if args.experiment == 'microstructures':
         from examples.microstructures.dataloader import get_dataset
+        train_loader, validation_loader = get_dataset(args.train_set_path, args.val_set_path)
+
     elif args.experiment == 'trajectories':
         from examples.trajectories.dataloader import get_dataset
+        train_loader, validation_loader = get_dataset(args.train_set_path, os.path.join(f"examples/{args.projection_path}/models", args.run_name), device)
+
     elif args.experiment == 'motion':
         from examples.motion.dataloader import get_dataset
+        train_loader, validation_loader = get_dataset(args.train_set_path, args.val_set_path)
+
     else:
         module_path = f"examples.{args.projection_path}.dataloader"
         projection_module = __import__(module_path, fromlist=["get_dataset"])
         get_dataset = getattr(projection_module, "get_dataset")
-    train_loader, validation_loader = get_dataset(args.train_set_path, args.val_set_path)
+        train_loader, validation_loader = get_dataset(args.train_set_path, args.val_set_path)
 
     # Set up trainer
     current_iteration = 0

@@ -28,10 +28,10 @@
 **Projected Diffusion Models (PDM)** alter the sampling step in diffusion models to generate outputs that satisfy desired constraints and physical principles. The approach endows generative diffusion processes the ability to *satisfy and certify compliance with constraints and physical principles.* The proposed method recasts the traditional sampling process of generative diffusion models as a constrained optimization problem, steering the generated data distribution to remain within a specified region to ensure adherence to the given constraints. These capabilities are validated on applications featuring both convex and challenging, non-convex, constraints as well as ordinary differential equations, in domains spanning from synthesizing new materials with precise morphometric properties, generating physics-informed motion, optimizing paths in planning scenarios, and human motion synthesis.
 
 Explored Settings:
-- **Constrained Microstructure Generation:** Behavior in low data regimes and with original distribution violating constraints, as part of a real-world material science experiment.
-- **3D Human Motion:** Behavior on 3-dimensional sequence generation with physical constraints.
-- **Constrained Trajectory Optimization:** Behavior on complex non-convex constraints.
-- **Physics-Informed Motion:** Behavior on ODEs and under constraints outside the training distribution.
+- [x] **Constrained Microstructure Generation:** Behavior in low data regimes and with original distribution violating constraints, as part of a real-world material science experiment.
+- [x] **Physics-Informed Motion:** Behavior on ODEs and under constraints outside the training distribution.
+- [ ] **Constrained Trajectory Optimization:** Behavior on complex non-convex constraints.
+- [ ] **3D Human Motion:** Behavior on 3-dimensional sequence generation with physical constraints.
 
 ---
 

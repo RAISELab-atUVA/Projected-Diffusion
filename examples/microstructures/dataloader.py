@@ -1,8 +1,10 @@
 import torch
-import ddpm_conditional
 import os
 import torchvision
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
+from PIL import Image
+
+# TODO: Fix hardcoded cuda mapping
 
 
 def normalize_sample(tensor):
@@ -16,17 +18,15 @@ def convert_to_grayscale(image_tensor):
     return grayscale_image
 
 def get_dataset(train_path, val_path):
-    train_loader, validation_loader = ddpm_conditional.get_data_conditional(8, 64, train_path, val_path)
-    train_loader = normalize_sample(torch.stack([convert_to_grayscale(img) for i, img in enumerate(train_loader)]))
-    validation_loader = normalize_sample(torch.stack([convert_to_grayscale(img) for i, img in enumerate(validation_loader)]))
+    train_loader, validation_loader = get_data_conditional(8, 64, train_path, val_path)
     return train_loader, validation_loader
+
 
 class CustomImageDataset(Dataset):
     def __init__(self, root_dir, mode, transform=None):
         self.root_dir = root_dir
         self.mode = mode
-        self.text_dir = os.path.join("/path/to/dir/Moments", self.mode)
-        self.image_dir = os.path.join(self.root_dir, "N5")  
+        self.image_dir = self.root_dir 
         self.image_paths = [f for f in os.listdir(self.image_dir) if f.endswith('.bmp')]  # Use .tiff if required
         self.transform = transform
 
@@ -38,18 +38,12 @@ class CustomImageDataset(Dataset):
         image = default_loader(img_name)  # Make sure default_loader is defined or use an appropriate function from torchvision
 
         base_name = os.path.splitext(self.image_paths[idx])[0]
-        moments_file = os.path.join(self.text_dir, base_name + '_moments.txt')
-
-        tensor_values = extract_values(moments_file)  # Make sure extract_values is defined
-        if tensor_values.size() != torch.Size([33]):
-            tensor_values = None
 
         if self.transform:
             image = self.transform(image)
         
-        #print(tensor_values, moments_file)
-
-        return image, tensor_values
+        # TODO: Remove placeholder tensor
+        return image.to(torch.device('cuda:0')), torch.tensor([0]).to(torch.device('cuda:0'))
 
 
 def default_loader(path):
@@ -69,13 +63,16 @@ def get_data_conditional(batch_size, image_size, train_dataset_path, val_dataset
         torchvision.transforms.Resize(image_size + image_size // 4),
         torchvision.transforms.RandomResizedCrop(image_size, scale=(0.8, 1.0)),
         torchvision.transforms.ToTensor(),
-        torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        torchvision.transforms.Grayscale(num_output_channels=1),
+        
     ])
     
     val_transforms = torchvision.transforms.Compose([
         torchvision.transforms.Resize(image_size),
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        torchvision.transforms.Grayscale(num_output_channels=1),
     ])
     
     train_dataset = CustomImageDataset(

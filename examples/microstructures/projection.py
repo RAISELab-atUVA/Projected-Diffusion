@@ -2,7 +2,7 @@ import torch
 import numpy as np
 from math import sqrt, isnan
 import cv2
-from utils import plot_images
+from projected_diffusion.utils import plot_images
 import random
 import sys
 import time 

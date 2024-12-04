@@ -12,11 +12,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 from functools import partial
-from projection import Projection
-from utils import plot_images, normalize_sample, get_data_conditional, convert_to_grayscale
+from projected_diffusion.utils import normalize_sample
 from tqdm import tqdm
 
-from torchmetrics.image.fid import FrechetInceptionDistance
 
 np.seterr(all='ignore')
 
@@ -559,7 +557,7 @@ class AnnealedLangevinDynamic():
             ##############
             # Projection #
             ##############
-            x = self.projection_step()
+            x = self.projection_step(x)
         
         return x
 

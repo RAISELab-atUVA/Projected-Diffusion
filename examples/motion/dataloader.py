@@ -5,22 +5,39 @@ import random
 import torch.utils.data as data
 import json
 import cv2
-import datasets.video_transforms as vtransforms
+import examples.motion.video_transforms as vtransforms
 import torchvision.transforms as transforms
 import torch
 from torch.utils.data import DataLoader
 
+
+def custom_collate_fn(batch):
+    # Batch is a list of tuples: (data, label)
+    data_list, labels_list = zip(*batch)  # Unzip the batch into data and labels
+    
+    # Stack data to form a tensor of shape [batch_size, N, ...]
+    data = torch.stack(data_list, dim=0)  # data.shape = [batch_size, N, ...]
+    
+    # Reshape data from [batch_size, N, ...] to [batch_size * N, 1, ...]
+    batch_size, N, *rest = data.shape
+    data = data.view(batch_size * N, *rest)  # Flatten N into the batch dimension
+    data = data.unsqueeze(1)  # If necessary, adjust the dimensions
+    
+    # Process labels accordingly
+    labels = torch.stack(labels_list, dim=0)  # labels.shape = [batch_size, ...]
+    
+    return data, labels
 
 
 def get_dataset(train_path, val_path):
     train_dataset      = load_balls('', 6, True)
     validation_dataset = load_balls('', 6, False)
 
-    data_loader = DataLoader(train_dataset, batch_size=64, shuffle=False,
-                            drop_last=True)
+    data_loader = DataLoader(train_dataset, batch_size=16, shuffle=False,
+                            drop_last=True, collate_fn=custom_collate_fn)
 
-    validation_loader = DataLoader(validation_dataset, batch_size=64, shuffle=False,
-                                drop_last=True)
+    validation_loader = DataLoader(validation_dataset, batch_size=16, shuffle=False,
+                                drop_last=True, collate_fn=custom_collate_fn)
     
     return data_loader, validation_loader
 
@@ -41,7 +58,7 @@ def make_dataset(root, is_train):
     data.append(torch.stack([ToTensor()(frame) for frame in bw_frames], dim=0).squeeze(1))
 
   dataset = torch.stack(data, dim=0)#.numpy()
-  print("TYPE: ", (dataset.shape))
+  # print("TYPE: ", (dataset.shape))
   return dataset
 
 class BouncingBalls(data.Dataset):

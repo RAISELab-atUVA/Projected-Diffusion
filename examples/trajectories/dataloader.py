@@ -1,8 +1,17 @@
-from mpd import models, losses, datasets, summaries
-from mpd.utils import model_loader, pretrain_helper
 from torch.utils.data import DataLoader, random_split
 import os
 import torch
+import sys
+
+# Add MPD repo to the path
+current_file_path = os.path.abspath(__file__)
+current_dir = os.path.dirname(current_file_path)
+sys.path.append(current_dir)
+
+from mpd import models, losses, datasets, summaries
+from mpd.utils import model_loader, pretrain_helper
+
+
 
 
 def get_dataset(train_path, results_dir, device):

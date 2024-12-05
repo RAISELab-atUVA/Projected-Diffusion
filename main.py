@@ -43,7 +43,6 @@ def main():
     else:
         _sample(args)
     
-# TODO: Don't overwrite run directories
 
 def _train(args):
     
@@ -99,7 +98,7 @@ def _train(args):
     # Set up trainer
     current_iteration = 0
     best_val_loss = float('inf') 
-    create_outputs_directory()
+    create_outputs_directory(exist_ok=False)
 
 
     # Set up logging
@@ -110,8 +109,6 @@ def _train(args):
     
         ## Training Routine ##
         model.train()
-        # for data in train_loader:
-            # print(data)
         for data, _ in train_loader:
             data = data.to(device)
             loss = model.loss_fn(data)
@@ -218,7 +215,7 @@ def _sample(args):
     def generate_images(n_samples, only_final=True):
         sample = dynamic.sampling(n_samples, only_final)
         return sample
-    create_outputs_directory()
+    create_outputs_directory(exist_ok=False)
 
     # Generate and save samples
     with torch.no_grad():
@@ -229,12 +226,12 @@ def _sample(args):
 
 
 
-def create_outputs_directory(path="outputs"):
+def create_outputs_directory(path="outputs", exist_ok=True):
     # Remove the directory if it exists
-    if os.path.exists(path):
+    if os.path.exists(path) and not exist_ok:
         shutil.rmtree(path)
     # Create a new empty directory
-    os.makedirs(path)
+    os.makedirs(path, exist_ok=exist_ok)
     print(f"Directory '{path}' has been created.")
 
 

@@ -350,7 +350,7 @@ class ConditionalInstanceNorm2dPlus(nn.Module):
 
 
 class CondRefineNetDilated(nn.Module):
-    def __init__(self,  device, L):
+    def __init__(self,  device, L, channels=1):
         super().__init__()
         # self.norm = ConditionalInstanceNorm2d
         self.norm = ConditionalInstanceNorm2dPlus
@@ -358,12 +358,15 @@ class CondRefineNetDilated(nn.Module):
         self.num_classes = L
         self.act = act = nn.ELU()
         self.device = device
+        self.channels = channels
         # self.act = act = nn.ReLU(True)
 
-        self.begin_conv = nn.Conv2d(1, self.ngf, 3, stride=1, padding=1)
+        # self.begin_conv = nn.Conv2d(1, self.ngf, 3, stride=1, padding=1)
+        self.begin_conv = nn.Conv2d(self.channels, self.ngf, 3, stride=1, padding=1)
         self.normalizer = self.norm(self.ngf, self.num_classes)
 
-        self.end_conv = nn.Conv2d(self.ngf, 1, 3, stride=1, padding=1)
+        # self.end_conv = nn.Conv2d(self.ngf, 1, 3, stride=1, padding=1)
+        self.end_conv = nn.Conv2d(self.ngf, self.channels, 3, stride=1, padding=1)
 
         self.res1 = nn.ModuleList([
             ConditionalResidualBlock(self.ngf, self.ngf, self.num_classes, resample=None, act=act,
@@ -426,7 +429,7 @@ class CondRefineNetDilated(nn.Module):
 
     
 class Model(nn.Module):
-    def __init__(self, device, n_steps, sigma_min, sigma_max):
+    def __init__(self, device, n_steps, sigma_min, sigma_max, channels=1):
         '''
         Score Network.
 
@@ -438,7 +441,7 @@ class Model(nn.Module):
         super().__init__()
         self.device = device
         self.sigmas = torch.exp(torch.linspace(start=math.log(sigma_max), end=math.log(sigma_min), steps = n_steps)).to(device = device)
-        self.conv_layer = CondRefineNetDilated(device, n_steps)
+        self.conv_layer = CondRefineNetDilated(device, n_steps, channels=channels)
         self.to(device = device)
 
     # Loss Function
@@ -500,6 +503,7 @@ class AnnealedLangevinDynamic():
         self.annealed_step = annealed_step
         self.device = device
         self.img_size = 64
+        self.channels = 1
         
         # Change these values to control PGD guidance        
         self.projection_step = projection_step
@@ -566,7 +570,7 @@ class AnnealedLangevinDynamic():
         '''
         only_final : If True, return is an only output of final schedule step 
         '''
-        sample = torch.rand([sampling_number, 1, self.img_size, self.img_size]).to(device = self.device)
+        sample = torch.rand([sampling_number, self.channels, self.img_size, self.img_size]).to(device = self.device)
         sampling_list = []
         
         final = None
@@ -618,3 +622,4 @@ class ProgressMeter(object):
         num_digits = len(str(num_batches // 1))
         fmt = '{:' + str(num_digits) + 'd}'
         return '[' + fmt + '/' + fmt.format(num_batches) + ']'
+

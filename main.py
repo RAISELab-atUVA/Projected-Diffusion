@@ -33,6 +33,7 @@ def main():
     # Projection parameters
     parser.add_argument("--porosity", type=float, default=0.25, help="Porosity for microstructure projection [leave blank if not running \'microstructures\' sampling]")
     parser.add_argument("--gravity", type=float, default=9.8, help="Gravity for motion projection [leave blank if not running \'motion\' sampling]")
+    parser.add_argument("--obstacles", type=list, default=[], help="Obstacles for trajectories projection [leave blank if not running \'trajectories\' sampling]")
     
 
     args = parser.parse_args()
@@ -42,17 +43,21 @@ def main():
     else:
         _sample(args)
     
-
+# TODO: Don't overwrite run directories
 
 def _train(args):
     
     # Load model
-    model = Model(device, args.n_steps, args.sigma_min, args.sigma_max)
+    channels = 4 if args.experiment == 'trajectories' else 1
+    model = Model(device, args.n_steps, args.sigma_min, args.sigma_max, channels=channels)
     # Resume training if applicable
     if args.model_path is not None:
         model.load_state_dict(torch.load(args.model_path, map_location=device))
     model.train()
     dynamic = AnnealedLangevinDynamic(args.sigma_min,args.sigma_max, args.n_steps, args.annealed_step, model, None, device, eps= args.eps)
+    dynamic.channels = channels
+    if args.experiment == 'trajectories': dynamic.img_size = 8
+        
     optim = torch.optim.Adam(model.parameters(), lr = 0.005)
 
     # Generate dataset
@@ -72,10 +77,11 @@ def _train(args):
         train_loader, validation_loader = get_dataset(args.train_set_path, args.val_set_path)
 
     elif args.experiment == 'trajectories':
-        raise NotImplementedError('Support will be added in future releases.')
+        # raise NotImplementedError('Support will be added in future releases.')
+        
         from examples.trajectories.dataloader import get_dataset
         train_loader, validation_loader = get_dataset(args.train_set_path, os.path.join(f"examples/{args.experiment}/models", args.run_name), device)
-
+        
     elif args.experiment == 'motion':
         from examples.motion.dataloader import get_dataset
         train_loader, validation_loader = get_dataset(args.train_set_path, args.val_set_path)
@@ -104,6 +110,8 @@ def _train(args):
     
         ## Training Routine ##
         model.train()
+        # for data in train_loader:
+            # print(data)
         for data, _ in train_loader:
             data = data.to(device)
             loss = model.loss_fn(data)
@@ -147,10 +155,19 @@ def _train(args):
             model_save_path = os.path.join(models_dir, args.run_name, f"ckpt_{current_iteration}.pt")
             torch.save(model.state_dict(), model_save_path)
             dynamic = scoremodel.AnnealedLangevinDynamic(args.sigma_min, args.sigma_max, args.n_steps, args.annealed_step, model, None, device, eps=args.eps)
+            dynamic.channels = channels
+            if args.experiment == 'trajectories': dynamic.img_size = 8
+            
             sample = dynamic.sampling(args.n_samples, only_final=True)
-            for i in range(len(sample)):
-                save_path = f'outputs/sample_{i}_step_{current_iteration}.png'
-                utils.save_images(sample[i], save_path)
+            
+            if args.experiment != 'trajectories':
+                for i in range(len(sample)):
+                    save_path = f'outputs/sample_{i}_step_{current_iteration}.png'
+                    utils.save_images(sample[i], save_path)
+            else:
+                for i in range(len(sample)):
+                    save_path = f'outputs/sample_{i}_step_{current_iteration}.pt'
+                    torch.save(sample[i], save_path)
             
 
 
@@ -188,11 +205,14 @@ def _sample(args):
 
 
     # Load model
-    model = Model(device, args.n_steps, args.sigma_min, args.sigma_max)
+    channels = 4 if args.experiment == 'trajectories' else 1
+    model = Model(device, args.n_steps, args.sigma_min, args.sigma_max, channels=channels)
     if args.model_path is not None:
         model.load_state_dict(torch.load(args.model_path, map_location=device))
     model.eval()
     dynamic = AnnealedLangevinDynamic(args.sigma_min,args.sigma_max, args.n_steps, args.annealed_step, model, projector, device, eps= args.eps)
+    dynamic.channels = channels
+    if args.experiment == 'trajectories': dynamic.img_size = 8
 
     # Sampling function
     def generate_images(n_samples, only_final=True):

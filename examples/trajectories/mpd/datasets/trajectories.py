@@ -15,7 +15,7 @@ from torch_robotics.tasks.tasks import PlanningTask
 from torch_robotics.visualizers.planning_visualizer import PlanningVisualizer
 
 repo = git.Repo('.', search_parent_directories=True)
-dataset_base_dir = os.path.join(repo.working_dir, 'data_trajectories')
+dataset_base_dir = os.path.join(repo.working_dir, 'examples/trajectories/data_trajectories')
 
 
 class TrajectoryDatasetBase(Dataset, abc.ABC):
@@ -162,8 +162,17 @@ class TrajectoryDatasetBase(Dataset, abc.ABC):
         # build hard conditions
         hard_conds = self.get_hard_conditions(traj_normalized, horizon=len(traj_normalized))
         data.update({'hard_conds': hard_conds})
-
-        return data
+        
+        # JC
+        data_new = torch.zeros((1, 4, 64))
+        # print(data['traj_normalized'].shape)
+        data_new[:, :, :64] = data['traj_normalized'].unsqueeze(0).permute(0, 2, 1)
+        # print(data_new.shape)
+        
+        data = data_new.to(self.tensor_args['device']).reshape((4, 8, 8))
+        label = torch.tensor(0)
+        
+        return (data, label)
 
     def get_hard_conditions(self, traj, horizon=None, normalize=False):
         raise NotImplementedError

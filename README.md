@@ -24,7 +24,7 @@
 Explored Settings:
 - [x] **Constrained Microstructure Generation (microstructure):** Behavior in low data regimes and with original distribution violating constraints, as part of a real-world material science experiment.
 - [x] **Physics-Informed Motion (motion):** Behavior on ODEs and under constraints outside the training distribution.
-- [ ]**Constrained Trajectory Optimization (trajecories):** Behavior on complex non-convex constraints.
+- [ ] **Constrained Trajectory Optimization (trajecories):** Behavior on complex non-convex constraints.
 - [ ] **3D Human Motion (human):** Behavior on 3-dimensional sequence generation with physical constraints.
 
 ---

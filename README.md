@@ -42,6 +42,31 @@ python main.py --mode 'train' --experiment [experimental setting] --train_set_pa
 python main.py --mode 'sample' --n_samples 1 --experiment [experimental setting] 
 ```
 
+## Example: Physics-Informed Motion Experiment
+
+Begin by setting up your environment.
+
+Now, we can train the model:
+
+```
+python main.py --mode 'train' --experiment 'motion' --run_name 'example_training'
+```
+
+When the training has converged, we can run the inference step:
+
+```
+python main.py --mode 'sample' --n_samples 5 --experiment 'motion' --model_path 'examples/motion/models/example_training/ckpt.pt'
+```  
+
+Now, five consecutive frames have been generated in the `outputs` directory. By default, this experiment generates frames with the Earth's gravitational pull, but we can change to use the moon's gravity by rerunning the inference step with a different ODE.
+
+```
+python main.py --mode 'sample' --n_samples 5 --experiment 'motion' --model_path 'examples/motion/models/example_training/ckpt.pt' --gravity 1.6
+```  
+
+The `outputs` directory will now contain frames with the altered dynamics for the governing equations.
+
+
 ## Supporting Repositories
 
 This implementation is built upon several existing repositories.

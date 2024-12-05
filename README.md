@@ -1,16 +1,14 @@
 <div align="center"><h1>&nbsp;Projected Diffusion Models</h1></div>
 
 <p align="center">
-| <a href="https://arxiv.org/pdf/2402.03559.pdf"><b>Paper</b></a> | 
-<a href="https://neurips.cc/virtual/2024/poster/95942"><b>Poster</b></a> |
-</p>
-
-<p align="center">
-  <a href="">
+  <a href="https://arxiv.org/abs/2402.03559" target="_blank">
+  <img src="https://img.shields.io/badge/arXiv-2402.03559-red.svg" alt="arXiv">
+</a>
+<a href="https://neurips.cc/virtual/2024/poster/95942" target="_blank">
+  <img src="https://img.shields.io/badge/NeurIPS%20Poster-2024-blue.svg" alt="NeurIPS Poster">
+</a>
+<a href="">
     <img src="https://img.shields.io/badge/Version-v1.0.0-orange.svg" alt="Version">
-  </a>
-  <a href="https://opensource.org/licenses/Apache-2.0">
-    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License">
   </a>
 
 </p>
